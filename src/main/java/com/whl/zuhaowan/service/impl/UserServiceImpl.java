@@ -2,9 +2,13 @@ package com.whl.zuhaowan.service.impl;
 
 
 import com.github.pagehelper.PageHelper;
+import com.whl.zuhaowan.contants.Constant;
 import com.whl.zuhaowan.entity.SysUser;
 
 import com.whl.zuhaowan.mapper.SysUserMapper;
+import com.whl.zuhaowan.service.PermissionService;
+import com.whl.zuhaowan.service.RoleService;
+import com.whl.zuhaowan.service.UserRoleService;
 import com.whl.zuhaowan.service.UserService;
 import com.whl.zuhaowan.entity.SysRolePermission;
 import com.whl.zuhaowan.entity.SysUserRole;
@@ -15,145 +19,161 @@ import com.whl.zuhaowan.mapper.SysUserRoleMapper;
 
 import com.whl.zuhaowan.utils.JwtTokenUtil;
 import com.whl.zuhaowan.utils.PageUtil;
+import com.whl.zuhaowan.utils.PasswordUtils;
+import com.whl.zuhaowan.utils.RSAEncrypt;
 import com.whl.zuhaowan.vo.req.*;
 import com.whl.zuhaowan.vo.resp.LoginRespVO;
 import com.whl.zuhaowan.vo.resp.PageVO;
+import com.whl.zuhaowan.vo.resp.UserOwnRoleRespVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.Resource;
 import java.lang.reflect.Field;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Service
 public class UserServiceImpl implements UserService {
 
-    @Autowired
-    private SysUserMapper userInfoMapper;
+    @Value("${user.default.role}")
+    private String userDefaultRole;
 
+    @Resource
+    private SysUserMapper sysUserMapper;
+//    @Autowired
+//    private PaasPlatformService paasPlatformService;
+//    @Autowired
+//    private RedisService redisService;
     @Autowired
+    private UserRoleService userRoleService;
+    @Autowired
+    private RoleService roleService;
+//    @Autowired
+//    private TokenSettings tokenSettings;
+    @Autowired
+    private PermissionService permissionService;
+
+    @Resource
     private SysUserRoleMapper sysUserRoleMapper;
 
-    @Autowired
-    private SysRolePermissionMapper sysRolePermissionMapper;
-
     @Override
-    public SysUser addUser(AddUserReqVO vo) {
-        SysUser user = new SysUser();
-        BeanUtils.copyProperties(vo,user);
-        user.setId(UUID.randomUUID().toString());
-        user.setCreateTime(new Date());
-        user.setUpdateTime(new Date());
-        int i = userInfoMapper.insertSelective(user);
-        if (i!=1){
-            throw new BusinessException(BaseResponseCode.DATA_ERROR);
-        }
-        return user;
-    }
-
-    @Override
-    public void deleteUserById(String id) {
-        int i = userInfoMapper.deleteByPrimaryKey(id);
-        if (i!=1){
-            throw new BusinessException(BaseResponseCode.DATA_ERROR);
-        }
-    }
-
-    @Override
-    public SysUser updateUser(UpdateUserReqVO vo) {
-        SysUser userInfo = new SysUser();
-        BeanUtils.copyProperties(vo,userInfo);
-        int i = userInfoMapper.updateByPrimaryKeySelective(userInfo);
-        if (i!=1){
-            throw new BusinessException(BaseResponseCode.DATA_ERROR);
-        }
-        return userInfo;
+    public LoginRespVO login(LoginReqVO vo) {
+        return null;
     }
 
     @Override
     public PageVO<SysUser> pageInfo(UserPageReqVO vo) {
-        PageHelper.startPage(vo.getPageNum(),vo.getPageSize());
-        List<SysUser> list = userInfoMapper.selectAll(vo);
-        return PageUtil.getPageVO(list);
+        return null;
     }
 
     @Override
-    public SysUser detailUser(String id) {
-        SysUser userInfo = userInfoMapper.selectByPrimaryKey(id);
-        return userInfo;
-    }
-
-    @Override
-    public LoginRespVO login(LoginReqVO vo) {
-        SysUser userInfo = userInfoMapper.selectByuserName(vo.getUsername());
-        LoginRespVO loginRespVO = new LoginRespVO();
-        if(userInfo==null){
-            throw new BusinessException(BaseResponseCode.ACCOUNT_ERROR);
+    public void addUser(UserAddReqVO vo) {
+        SysUser sysUser=new SysUser();
+        //RSA解密
+        String decryptPassword = null;
+        try {
+            decryptPassword = RSAEncrypt.decrypt(vo.getPassword(), Constant.RSA_PRIVATE);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-
-        if(!userInfo.getPassword().equals(vo.getPassword())){
-            throw new BusinessException(BaseResponseCode.ACCOUNT_PASSWORD_ERROR);
+        vo.setPassword(decryptPassword);
+        sysUser.setUsername(vo.getUsername());
+        int count = sysUserMapper.getCount(sysUser);
+        if(count>0){
+            throw new BusinessException(BaseResponseCode.OPERATION_ERROR.getCode(),"账号已被占用");
         }
-        loginRespVO.setId(userInfo.getId());
-        List<String> roleIdsByUserId = sysUserRoleMapper.getRoleIdsByUserId(userInfo.getId());
-        int max =0;
-        for (String s : roleIdsByUserId){
-            int i = Integer.parseInt(s);
-            if (i>max){
-                max =i;
-            }
+        BeanUtils.copyProperties(vo,sysUser);
+        sysUser.setId(UUID.randomUUID().toString());
+        sysUser.setCreateTime(new Date());
+        String salt= PasswordUtils.getSalt();
+        String ecdPwd=PasswordUtils.encode(vo.getPassword(),salt);
+        sysUser.setSalt(salt);
+        sysUser.setPassword(ecdPwd);
+        int i = sysUserMapper.insertSelective(sysUser);
+        if(i!=1){
+            throw new BusinessException(BaseResponseCode.OPERATION_ERROR);
         }
-        /**
-         *生成token
-         *  */
-        Map<String, Object> claims=new HashMap<>();
-        claims.put("role",max);
-        /**将除了密码之外，所有用户信息放入token**/
-        for (Field field:userInfo.getClass().getDeclaredFields()) {
-            field.setAccessible(true);
-            try {
-                if(!(field.getName().equals("password") || field.getName().equals("salt"))){
-                    claims.put(field.getName(),field.get(userInfo));
-                }
-            } catch (IllegalAccessException e) {
-                throw new BusinessException(BaseResponseCode.OPERATION_ERROR);
-            }
-        }
-        String accessToken= JwtTokenUtil.getAccessToken(userInfo.getId(), claims);
-
-        loginRespVO.setUsername(vo.getUsername());
-        loginRespVO.setRole(roleIdsByUserId);
-        loginRespVO.setAccessToken(accessToken);
-        return loginRespVO;
-    }
-
-    @Override
-    public SysUserRole addUserRole(AddUserRoleReqVO vo) {
+        /*新增用户添加默认role*/
+        String userId = sysUser.getId();
         SysUserRole sysUserRole = new SysUserRole();
-        BeanUtils.copyProperties(vo,sysUserRole);
         sysUserRole.setId(UUID.randomUUID().toString());
+        sysUserRole.setUserId(userId);
         sysUserRole.setCreateTime(new Date());
-        int i = sysUserRoleMapper.insertSelective(sysUserRole);
-        if (i!=1){
-            throw new BusinessException(BaseResponseCode.DATA_ERROR);
+        sysUserRole.setRoleId(userDefaultRole);
+        int insert = sysUserRoleMapper.insert(sysUserRole);
+        if(insert!=1){
+            throw new BusinessException(BaseResponseCode.OPERATION_ERROR.getCode(),"初始化用户权限出错");
         }
-        return sysUserRole;
     }
 
     @Override
-    public SysRolePermission addRolePermission(AddRolePermission vo) {
-        SysRolePermission sysRolePermission = new SysRolePermission();
-        BeanUtils.copyProperties(vo,sysRolePermission);
-        sysRolePermission.setId(UUID.randomUUID().toString());
-        sysRolePermission.setCreateTime(new Date());
-        int i = sysRolePermissionMapper.insertSelective(sysRolePermission);
-        if (i!=1){
-            throw new BusinessException(BaseResponseCode.DATA_ERROR);
-        }
-
-        return sysRolePermission;
+    public UserOwnRoleRespVO getUserOwnRole(String userId) {
+        return null;
     }
+
+    @Override
+    public void setUserOwnRole(UserOwnRoleReqVO vo) {
+
+    }
+
+    @Override
+    public String refreshToken(String refreshToken) {
+        return null;
+    }
+
+    @Override
+    public void updateUserInfo(UserUpdateReqVO vo, String operationId) {
+
+    }
+
+    @Override
+    public void deletedUsers(List<String> list, String operationId) {
+        SysUser sysUser=new SysUser();
+        sysUser.setUpdateId(operationId);
+        sysUser.setUpdateTime(new Date());
+        int i = sysUserMapper.deletedUsers(sysUser, list);
+        if(i==0){
+            throw new BusinessException(BaseResponseCode.OPERATION_ERROR);
+        }
+//        for (String userId:
+//                list) {
+//            redisService.set(Constant.DELETED_USER_KEY+userId,userId,tokenSettings.getRefreshTokenExpireAppTime().toMillis(), TimeUnit.MILLISECONDS);
+//            /**
+//             * 清楚用户授权数据缓存
+//             */
+//            redisService.delete(Constant.IDENTIFY_CACHE_KEY+userId);
+//        }
+    }
+
+    @Override
+    public List<SysUser> selectUserInfoByDeptIds(List<String> deptIds) {
+        return null;
+    }
+
+    @Override
+    public SysUser detailInfo(String userId) {
+        return null;
+    }
+
+    @Override
+    public void userUpdateDetailInfo(UserUpdateDetailInfoReqVO vo, String userId) {
+
+    }
+
+    @Override
+    public void userUpdatePwd(UserUpdatePwdReqVO vo, String accessToken, String refreshToken) {
+
+    }
+
+    @Override
+    public void logout(String accessToken, String refreshToken) {
+
+    }
+
 
 }

@@ -1,7 +1,6 @@
 package com.whl.zuhaowan.mapper;
 
 import com.whl.zuhaowan.entity.SysPermission;
-import com.whl.zuhaowan.vo.req.PermissionPageReqVO;
 
 import java.util.List;
 
@@ -18,5 +17,9 @@ public interface SysPermissionMapper {
 
     int updateByPrimaryKey(SysPermission record);
 
-    List<SysPermission> selectAll(PermissionPageReqVO vo);
+    List<SysPermission> selectAll();
+
+    List<SysPermission> selectChild(String permissionId);
+
+    List<SysPermission> selectByIds (List<String> ids);
 }

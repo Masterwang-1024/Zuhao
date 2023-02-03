@@ -1,8 +1,10 @@
 package com.whl.zuhaowan.entity;
 
+import lombok.Data;
+
 import java.io.Serializable;
 import java.util.Date;
-
+@Data
 public class SysUser implements Serializable {
     private String id;
 
@@ -13,6 +15,8 @@ public class SysUser implements Serializable {
     private String password;
 
     private String phone;
+
+    private String deptId;
 
     private String realName;
 

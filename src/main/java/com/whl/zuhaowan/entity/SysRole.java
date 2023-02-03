@@ -18,7 +18,7 @@ public class SysRole implements Serializable {
 
     private Date updateTime;
 
-    private Byte deleted;
+    private Integer deleted;
 
     private static final long serialVersionUID = 1L;
 }

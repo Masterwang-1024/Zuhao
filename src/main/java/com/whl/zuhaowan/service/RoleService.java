@@ -23,5 +23,5 @@ public interface RoleService {
     SysRole detailInfo(String id);
     void updateRole(RoleUpdateReqVO vo);
     void deletedRole(String roleId);
-
+    List<String> getNamesByUserId(String userId);
 }

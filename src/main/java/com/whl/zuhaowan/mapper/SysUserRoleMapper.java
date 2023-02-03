@@ -17,11 +17,15 @@ public interface SysUserRoleMapper {
 
     int updateByPrimaryKey(SysUserRole record);
 
-
     List<String> getRoleIdsByUserId(String userId);
+
     void removeRoleByUserId(String userId);
+
     int batchInsertUserRole(List<SysUserRole> list);
+
     List<String> getUserIdsByRoleIds(List<String> roleIds);
+
     List<String> getUserIdsByRoleId(String roleId);
+
     int removeUserRoleId(String roleId);
 }

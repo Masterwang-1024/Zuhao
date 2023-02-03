@@ -20,16 +20,42 @@
     where id = #{id,jdbcType=VARCHAR}
   </select>
 
-  <!-- @Description:     查询所有用户-->
+  <!-- @Description:     根据条件查询所有角色数据-->
+  <!-- @Author:          liuxl-->
   <select id="selectAll" resultMap="BaseResultMap" parameterType="com.whl.zuhaowan.vo.req.RolePageReqVO">
     select <include refid="Base_Column_List"></include>
     from sys_role
     <where>
-      <if test="name !=null and name != ''">
-        and `name` like concat('%',#{name},'%')
+      deleted=1
+      <if test="roleName !=null and roleName != ''">
+        and name like  concat('%',#{roleName},'%')
+      </if>
+      <if test="roleId !=null and roleId !=''">
+        and id=#{roleId}
+      </if>
+      <if test="status !=null and status !='' or status==0">
+        and status=#{status}
+      </if>
+      <if test="startTime !=null and startTime !=''">
+        and create_time &gt;= #{startTime}
+      </if>
+      <if test="endTime !=null and endTime !=''">
+        and create_time &lt;= #{endTime}
       </if>
     </where>
     order by create_time desc
+  </select>
+
+  <!-- @Description:     通过id集合获取名称集合-->
+  <!-- @Author:          liuxl-->
+  <select id="selectNamesByIds" resultType="java.lang.String">
+    select name
+    from sys_role
+    where id in
+    <foreach collection="list" item="item" open="(" separator="," close=")">
+      #{item}
+    </foreach>
+    and deleted=1
   </select>
   <delete id="deleteByPrimaryKey" parameterType="java.lang.String">
     delete from sys_role

@@ -2,6 +2,7 @@ package com.whl.zuhaowan.service.impl;
 
 import com.github.pagehelper.PageHelper;
 import com.whl.zuhaowan.mapper.SysRoleMapper;
+import com.whl.zuhaowan.service.UserRoleService;
 import com.whl.zuhaowan.utils.PageUtil;
 import com.whl.zuhaowan.vo.req.AddRoleReqVO;
 import com.whl.zuhaowan.vo.req.RoleUpdateReqVO;
@@ -11,12 +12,15 @@ import com.whl.zuhaowan.exception.BusinessException;
 import com.whl.zuhaowan.exception.code.BaseResponseCode;
 import com.whl.zuhaowan.service.RoleService;
 import com.whl.zuhaowan.vo.req.RolePageReqVO;
+import com.whl.zuhaowan.vo.resp.PermissionRespNodeVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 @Service
 @Slf4j
@@ -24,6 +28,17 @@ public class RoleServiceImpl implements RoleService {
 
     @Autowired
     private SysRoleMapper sysRoleMapper;
+
+//    @Autowired
+//    private RolePermissionService rolePermissionService;
+//    @Autowired
+//    private PermissionService permissionService;
+//    @Autowired
+    private UserRoleService userRoleService;
+//    @Autowired
+//    private RedisService redisService;
+//    @Autowired
+//    private TokenSettings tokenSettings;
 
     @Override
     public PageVO<SysRole> pageInfo(RolePageReqVO vo) {
@@ -42,6 +57,12 @@ public class RoleServiceImpl implements RoleService {
         if(i!=1){
             throw new BusinessException(BaseResponseCode.DATA_ERROR);
         }
+//        if(vo.getPermissions()!=null&&!vo.getPermissions().isEmpty()){
+//            RolePermissionOperationReqVO operationReqVO=new RolePermissionOperationReqVO();
+//            operationReqVO.setRoleId(sysRole.getId());
+//            operationReqVO.setPermissionIds(vo.getPermissions());
+//            rolePermissionService.addRolePermission(operationReqVO);
+//        }
         return sysRole;
     }
 
@@ -58,6 +79,14 @@ public class RoleServiceImpl implements RoleService {
             log.error("传入 的 id:{}不合法",id);
             throw new BusinessException(BaseResponseCode.DATA_ERROR);
         }
+//        //获取所有权限菜单权限树
+//        List<PermissionRespNodeVO> permissionRespNodeVOS = permissionService.selectAllTree();
+//        //获取该角色拥有的菜单权限
+//        List<String> permissionIdsByRoleId = rolePermissionService.getPermissionIdsByRoleId(id);
+//        Set<String> checkList=new HashSet<>(permissionIdsByRoleId);
+//        //遍历菜单权限树的数据
+//        setChecked(permissionRespNodeVOS,checkList);
+//        sysRole.setPermissionRespNode(permissionRespNodeVOS);
         return sysRole;
     }
 
@@ -75,21 +104,70 @@ public class RoleServiceImpl implements RoleService {
         if(count!=1){
             throw new BusinessException(BaseResponseCode.OPERATION_ERROR);
         }
+//        //修改该角色和菜单权限关联数据
+//        RolePermissionOperationReqVO reqVO=new RolePermissionOperationReqVO();
+//        reqVO.setRoleId(vo.getId());
+//        reqVO.setPermissionIds(vo.getPermissions());
+//        rolePermissionService.addRolePermission(reqVO);
+        //标记关联用户
+//        List<String> userIdsBtRoleId = userRoleService.getUserIdsBtRoleId(vo.getId());
+//        if(!userIdsBtRoleId.isEmpty()){
+//            for (String userId:
+//                    userIdsBtRoleId) {
+//                /**
+//                 * 标记用户 在用户认证的时候判断这个是否主动刷过
+//                 */
+//                redisService.set(Constant.JWT_REFRESH_KEY+userId,userId,tokenSettings.getAccessTokenExpireTime().toMillis(), TimeUnit.MILLISECONDS);
+//
+//                /**
+//                 * 清楚用户授权数据缓存
+//                 */
+//                redisService.delete(Constant.IDENTIFY_CACHE_KEY+userId);
+//            }
+//        }
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void deletedRole(String roleId) {
         //就更新删除的角色数据
         SysRole sysRole=new SysRole();
         sysRole.setId(roleId);
+        sysRole.setDeleted(0);
         sysRole.setUpdateTime(new Date());
-        int i = sysRoleMapper.deleteByPrimaryKey(roleId);
+        int i = sysRoleMapper.updateByPrimaryKeySelective(sysRole);
         if(i!=1){
             throw new BusinessException(BaseResponseCode.OPERATION_ERROR);
         }
+//        //角色菜单权限关联数据删除
+//        rolePermissionService.removeByRoleId(roleId);
+//        List<String> userIdsBtRoleId = userRoleService.getUserIdsBtRoleId(roleId);
+//        //角色用户关联数据删除
+//        userRoleService.removeUserRoleId(roleId);
+//        //把跟该角色关联的用户标记起来，需要刷新token
+//        if(!userIdsBtRoleId.isEmpty()){
+//            for (String userId:
+//                    userIdsBtRoleId) {
+//                /**
+//                 * 标记用户 在用户认证的时候判断这个是否主动刷过
+//                 */
+//                redisService.set(Constant.JWT_REFRESH_KEY+userId,userId,tokenSettings.getAccessTokenExpireTime().toMillis(), TimeUnit.MILLISECONDS);
+//                /**
+//                 * 清楚用户授权数据缓存
+//                 */
+//                redisService.delete(Constant.IDENTIFY_CACHE_KEY+userId);
+//            }
+//        }
     }
 
-
+    @Override
+    public List<String> getNamesByUserId(String userId) {
+        List<String> roleIdsByUserId = userRoleService.getRoleIdsByUserId(userId);
+        if(roleIdsByUserId.isEmpty()){
+            return null;
+        }
+        return sysRoleMapper.selectNamesByIds(roleIdsByUserId);
+    }
 
 
 }

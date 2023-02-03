@@ -2,6 +2,8 @@ package com.whl.zuhaowan.mapper;
 
 import com.whl.zuhaowan.entity.SysRolePermission;
 
+import java.util.List;
+
 public interface SysRolePermissionMapper {
     int deleteByPrimaryKey(String id);
 
@@ -14,4 +16,20 @@ public interface SysRolePermissionMapper {
     int updateByPrimaryKeySelective(SysRolePermission record);
 
     int updateByPrimaryKey(SysRolePermission record);
+
+    int batchInsertRolePermission(List<SysRolePermission> list);
+
+    List<String> getRoleIdsByPermissionId(String permissionId);
+
+    //根据permissionId 删除角色和菜单权限关联表相关数据
+    int removeByPermissionId(String permissionId);
+
+    //根据角色id获取该角色关联的菜单权限id集合
+    List<String> getPermissionIdsByRoleId(String roleId);
+
+    //根绝角色id删除角色和菜单权限关联表相关数据
+    int removeByRoleId(String roleId);
+
+
+    List<String> getPermissionIdsByRoleIds(List<String> roleIds);
 }
