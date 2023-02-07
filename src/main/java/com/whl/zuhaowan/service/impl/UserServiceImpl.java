@@ -5,6 +5,7 @@ import com.github.pagehelper.PageHelper;
 import com.whl.zuhaowan.contants.Constant;
 import com.whl.zuhaowan.entity.SysUser;
 
+import com.whl.zuhaowan.mapper.SysRoleMapper;
 import com.whl.zuhaowan.mapper.SysUserMapper;
 import com.whl.zuhaowan.service.PermissionService;
 import com.whl.zuhaowan.service.RoleService;
@@ -17,10 +18,7 @@ import com.whl.zuhaowan.exception.code.BaseResponseCode;
 import com.whl.zuhaowan.mapper.SysRolePermissionMapper;
 import com.whl.zuhaowan.mapper.SysUserRoleMapper;
 
-import com.whl.zuhaowan.utils.JwtTokenUtil;
-import com.whl.zuhaowan.utils.PageUtil;
-import com.whl.zuhaowan.utils.PasswordUtils;
-import com.whl.zuhaowan.utils.RSAEncrypt;
+import com.whl.zuhaowan.utils.*;
 import com.whl.zuhaowan.vo.req.*;
 import com.whl.zuhaowan.vo.resp.LoginRespVO;
 import com.whl.zuhaowan.vo.resp.PageVO;
@@ -53,22 +51,73 @@ public class UserServiceImpl implements UserService {
     private UserRoleService userRoleService;
     @Autowired
     private RoleService roleService;
-//    @Autowired
-//    private TokenSettings tokenSettings;
+    @Autowired
+    private TokenSettings tokenSettings;
     @Autowired
     private PermissionService permissionService;
 
     @Resource
     private SysUserRoleMapper sysUserRoleMapper;
 
+    @Resource
+    private SysRoleMapper sysRoleMapper;
+
     @Override
     public LoginRespVO login(LoginReqVO vo) {
-        return null;
+        //通过用户名查询用户信息
+        //如果查询存在用户
+        //就比较它密码是否一样
+        SysUser  userInfoByName = sysUserMapper.getUserInfoByName(vo.getUsername());
+        if(userInfoByName==null){
+            throw new BusinessException(BaseResponseCode.ACCOUNT_ERROR);
+        }
+        if(userInfoByName.getStatus()==2){
+            throw new BusinessException(BaseResponseCode.ACCOUNT_LOCK_TIP);
+        }
+        //RSA解密
+        String decryptPassword = null;
+        try {
+            decryptPassword = RSAEncrypt.decrypt(vo.getPassword(),Constant.RSA_PRIVATE);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        if(!PasswordUtils.matches(userInfoByName.getSalt(),decryptPassword,userInfoByName.getPassword())){
+            throw new BusinessException(BaseResponseCode.ACCOUNT_PASSWORD_ERROR);
+        }
+        LoginRespVO loginRespVO=new LoginRespVO();
+        loginRespVO.setPhone(userInfoByName.getPhone());
+        loginRespVO.setUsername(userInfoByName.getUsername());
+        loginRespVO.setId(userInfoByName.getId());
+
+        Map<String, Object> claims=new HashMap<>();
+        UserOwnRoleRespVO userOwnRole = getUserOwnRole(userInfoByName.getId());
+        loginRespVO.setRole(userOwnRole.getOwnRoles());
+
+//        sysRoleMapper.selectByPrimaryKey()
+//        claims.put(Constant.ROLES_INFOS_KEY,getRoleByUserId(userInfoByName.getId()));
+//        claims.put(Constant.PERMISSIONS_INFOS_KEY,getPermissionByUserId(userInfoByName.getId()));
+//        redisService.set(Constant.PERMISSIONS_INFOS_KEY+userInfoByName.getId(),getPermissionByUserId(userInfoByName.getId()));
+//        redisService.set(Constant.ROLES_INFOS_KEY+userInfoByName.getId(),getRoleByUserId(userInfoByName.getId()));
+        claims.put(Constant.JWT_USER_NAME,userInfoByName.getUsername());
+        String accessToken= JwtTokenUtil.getAccessToken(userInfoByName.getId(),claims);
+        String refreshToken;
+        if(vo.getType().equals("1")){
+            refreshToken=JwtTokenUtil.getRefreshToken(userInfoByName.getId(),claims);
+        }else {
+            refreshToken=JwtTokenUtil.getRefreshAppToken(userInfoByName.getId(),claims);
+        }
+        loginRespVO.setAccessToken(accessToken);
+        loginRespVO.setRefreshToken(refreshToken);
+//        paasPlatformService.paasLogin(loginRespVO.getId());
+        return loginRespVO;
     }
 
     @Override
     public PageVO<SysUser> pageInfo(UserPageReqVO vo) {
-        return null;
+        PageHelper.startPage(vo.getPageNum(),vo.getPageSize());
+        List<SysUser> list=sysUserMapper.selectAll(vo);
+
+        return PageUtil.getPageVO(list);
     }
 
     @Override
@@ -113,11 +162,26 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserOwnRoleRespVO getUserOwnRole(String userId) {
-        return null;
+        UserOwnRoleRespVO respVO=new UserOwnRoleRespVO();
+        List<String> roleIds = userRoleService.getRoleIdsByUserId(userId);
+        List<String> roleNames = sysRoleMapper.selectNamesByIds(roleIds);
+        respVO.setOwnRoles(roleNames);
+        respVO.setAllRole(roleService.selectAll());
+        return respVO;
     }
 
     @Override
     public void setUserOwnRole(UserOwnRoleReqVO vo) {
+
+        userRoleService.addUserRoleInfo(vo);
+//        /**
+//         * 标记用户 要主动去刷新
+//         */
+//        redisService.set(Constant.JWT_REFRESH_KEY+vo.getUserId(),vo.getUserId(),tokenSettings.getAccessTokenExpireTime().toMillis(),TimeUnit.MILLISECONDS);
+//        /**
+//         * 清楚用户授权数据缓存
+//         */
+//        redisService.delete(Constant.IDENTIFY_CACHE_KEY+vo.getUserId());
 
     }
 

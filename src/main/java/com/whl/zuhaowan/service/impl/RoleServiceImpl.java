@@ -90,6 +90,21 @@ public class RoleServiceImpl implements RoleService {
         return sysRole;
     }
 
+    private void setChecked(List<PermissionRespNodeVO> list, Set<String> checkList){
+
+        for(PermissionRespNodeVO node:list){
+            /**
+             * 子集选中从它往上到跟目录都被选中，父级选中从它到它所有的叶子节点都会被选中
+             * 这样我们就直接遍历最底层及就可以了
+             */
+            if(checkList.contains(node.getId())&&(node.getChildren()==null||node.getChildren().isEmpty())){
+                node.setChecked(true);
+            }
+            setChecked((List<PermissionRespNodeVO>) node.getChildren(),checkList);
+
+        }
+    }
+
     @Override
     public void updateRole(RoleUpdateReqVO vo) {
         //保存角色基本信息

@@ -16,7 +16,7 @@ import java.util.Map;
 public class RSAEncrypt {
 	public static void main(String[] args) throws Exception {
 		Map<Integer, String> keyMap = genKeyPair();
-		String message = "heheheh";
+		String message = "password";
 		String pulbicKey = keyMap.get(0);
 		String privateKey = keyMap.get(1);
 		/*System.out.println("随机生成的公钥为:" + pulbicKey);
@@ -28,11 +28,15 @@ public class RSAEncrypt {
 		System.out.println("============================================");
 		String messageDe = decrypt(messageEn, privateKey);
 		System.out.println("还原后的字符串为:" + messageDe);*/
-		String password = "123@qwe";
-		//String keyPassword2 = encrypt(password,pulbicKey);
-		String keyPassword = encrypt(password, Constant.RSA_PUBLIC);
-		System.out.println("keyPassword:"+keyPassword);
-		System.out.printf("password:"+decrypt(keyPassword,Constant.RSA_PRIVATE));
+//		String password = "123@qwe";
+		System.out.println(message);
+		String keyPassword2 = encrypt(message,Constant.RSA_PUBLIC);
+		System.out.println("加密后:"+keyPassword2);
+		System.out.printf("解密后:"+decrypt(keyPassword2,Constant.RSA_PRIVATE));
+//		System.out.println("keyPassword:"+keyPassword);
+
+		String message2 = "Vaj6HAOH7VhvjPIpZJcROSBDiqzBaoU9mKjpKZgzPARgI2PLsKnOdeDEVv1jJaZaudXDWluL0gHnHlS3v73RHQ==";
+		System.out.printf("解密后:"+decrypt(message2,Constant.RSA_PRIVATE));
 
 	}
 	/**

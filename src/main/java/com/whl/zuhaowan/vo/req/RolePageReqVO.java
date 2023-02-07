@@ -19,17 +19,14 @@ public class RolePageReqVO {
     @ApiModelProperty(value = "当前页的数量")
     private int pageSize;
 
-    private String id;
-
-    private String name;
-
-    private String description;
-
-    private Byte status;
-
-    private Date createTime;
-
-    private Date updateTime;
-
-    private Byte deleted;
+    @ApiModelProperty(value = "角色id")
+    private String roleId;
+    @ApiModelProperty(value = "角色名称")
+    private String roleName;
+    @ApiModelProperty(value = "角色状态")
+    private Integer status;
+    @ApiModelProperty(value = "开始时间")
+    private String startTime;
+    @ApiModelProperty(value = "结束时间")
+    private String endTime;
 }

@@ -7,44 +7,28 @@ import java.util.Date;
 
 @Data
 public class UserPageReqVO {
-    @ApiModelProperty(value = "第几页")
-    private int pageNum=1;
+    @ApiModelProperty(value = "当前第几页")
+    private Integer pageNum=1;
 
-    @ApiModelProperty(value = "当前页的数量")
-    private int pageSize;
+    @ApiModelProperty(value = "当前页数量")
+    private Integer pageSize=10;
 
-    private String id;
+    @ApiModelProperty(value = "用户id")
+    private String userId;
 
+    @ApiModelProperty(value = "账号")
     private String username;
 
-    private String salt;
-
-    private String password;
-
-    private String phone;
-
-    private String realName;
-
+    @ApiModelProperty(value = "昵称")
     private String nickName;
 
-    private String email;
+    @ApiModelProperty(value = "账户状态(1.正常 2.锁定 ")
+    private Integer status;
 
-    private Byte status;
+    @ApiModelProperty(value = "开始时间")
+    private String startTime;
 
-    private Byte sex;
-
-    private Byte deleted;
-
-    private String createId;
-
-    private String updateId;
-
-    private Byte createWhere;
-
-    private Date createTime;
-
-    private Date updateTime;
-
-    private String companyName;
+    @ApiModelProperty(value = "结束时间")
+    private String endTime;
 
 }
