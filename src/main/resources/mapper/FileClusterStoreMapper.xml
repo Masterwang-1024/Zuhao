@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.whl.zuhaowan.mapper.FileClusterStoreMapper">
+  <resultMap id="BaseResultMap" type="com.whl.zuhaowan.entity.FileClusterStore">
+    <id column="id" jdbcType="VARCHAR" property="id" />
+    <result column="file_path" jdbcType="VARCHAR" property="filePath" />
+    <result column="bucket" jdbcType="VARCHAR" property="bucket" />
+    <result column="file_name" jdbcType="VARCHAR" property="fileName" />
+    <result column="business_module" jdbcType="TINYINT" property="businessModule" />
+    <result column="create_id" jdbcType="VARCHAR" property="createId" />
+    <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
+    <result column="is_dir" jdbcType="TINYINT" property="isDir" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    id, file_path, bucket, file_name, business_module, create_id, create_time, is_dir
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="java.lang.String" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from file_cluster_store
+    where id = #{id,jdbcType=VARCHAR}
+  </select>
+
+  <select id="getListByIds" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List" />
+    from file_cluster_store
+    where id in
+    <foreach collection="list" item="item" index="index" open="(" close=")" separator=",">
+      #{item}
+    </foreach>
+  </select>
+
+  <delete id="deleteByIds">
+    delete from file_cluster_store
+    where id in
+    <foreach collection="list" item="item" index="index" open="(" close=")" separator=",">
+      #{item}
+    </foreach>
+  </delete>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.String">
+    delete from file_cluster_store
+    where id = #{id,jdbcType=VARCHAR}
+  </delete>
+  <insert id="insert" parameterType="com.whl.zuhaowan.entity.FileClusterStore">
+    insert into file_cluster_store (id, file_path, bucket, 
+      file_name, business_module, create_id, 
+      create_time, is_dir)
+    values (#{id,jdbcType=VARCHAR}, #{filePath,jdbcType=VARCHAR}, #{bucket,jdbcType=VARCHAR}, 
+      #{fileName,jdbcType=VARCHAR}, #{businessModule,jdbcType=TINYINT}, #{createId,jdbcType=VARCHAR}, 
+      #{createTime,jdbcType=TIMESTAMP}, #{isDir,jdbcType=TINYINT})
+  </insert>
+  <insert id="insertSelective" parameterType="com.whl.zuhaowan.entity.FileClusterStore">
+    insert into file_cluster_store
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        id,
+      </if>
+      <if test="filePath != null">
+        file_path,
+      </if>
+      <if test="bucket != null">
+        bucket,
+      </if>
+      <if test="fileName != null">
+        file_name,
+      </if>
+      <if test="businessModule != null">
+        business_module,
+      </if>
+      <if test="createId != null">
+        create_id,
+      </if>
+      <if test="createTime != null">
+        create_time,
+      </if>
+      <if test="isDir != null">
+        is_dir,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        #{id,jdbcType=VARCHAR},
+      </if>
+      <if test="filePath != null">
+        #{filePath,jdbcType=VARCHAR},
+      </if>
+      <if test="bucket != null">
+        #{bucket,jdbcType=VARCHAR},
+      </if>
+      <if test="fileName != null">
+        #{fileName,jdbcType=VARCHAR},
+      </if>
+      <if test="businessModule != null">
+        #{businessModule,jdbcType=TINYINT},
+      </if>
+      <if test="createId != null">
+        #{createId,jdbcType=VARCHAR},
+      </if>
+      <if test="createTime != null">
+        #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="isDir != null">
+        #{isDir,jdbcType=TINYINT},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.whl.zuhaowan.entity.FileClusterStore">
+    update file_cluster_store
+    <set>
+      <if test="filePath != null">
+        file_path = #{filePath,jdbcType=VARCHAR},
+      </if>
+      <if test="bucket != null">
+        bucket = #{bucket,jdbcType=VARCHAR},
+      </if>
+      <if test="fileName != null">
+        file_name = #{fileName,jdbcType=VARCHAR},
+      </if>
+      <if test="businessModule != null">
+        business_module = #{businessModule,jdbcType=TINYINT},
+      </if>
+      <if test="createId != null">
+        create_id = #{createId,jdbcType=VARCHAR},
+      </if>
+      <if test="createTime != null">
+        create_time = #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="isDir != null">
+        is_dir = #{isDir,jdbcType=TINYINT},
+      </if>
+    </set>
+    where id = #{id,jdbcType=VARCHAR}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.whl.zuhaowan.entity.FileClusterStore">
+    update file_cluster_store
+    set file_path = #{filePath,jdbcType=VARCHAR},
+      bucket = #{bucket,jdbcType=VARCHAR},
+      file_name = #{fileName,jdbcType=VARCHAR},
+      business_module = #{businessModule,jdbcType=TINYINT},
+      create_id = #{createId,jdbcType=VARCHAR},
+      create_time = #{createTime,jdbcType=TIMESTAMP},
+      is_dir = #{isDir,jdbcType=TINYINT}
+    where id = #{id,jdbcType=VARCHAR}
+  </update>
+</mapper>

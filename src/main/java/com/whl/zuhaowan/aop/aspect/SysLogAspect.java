@@ -7,6 +7,7 @@ import com.whl.zuhaowan.entity.SysLog;
 import com.whl.zuhaowan.mapper.SysLogMapper;
 import com.whl.zuhaowan.utils.HttpContextUtils;
 import com.whl.zuhaowan.utils.IPUtils;
+import com.whl.zuhaowan.utils.JwtTokenUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -127,10 +128,10 @@ public class SysLogAspect {
             token = request.getParameterMap().get(Constant.ACCESS_TOKEN)[0];
         }
 
-//        String userId= JwtTokenUtil.getUserId(token);
-//        String username= JwtTokenUtil.getUserName(token);
-//        sysLog.setUsername(username);
-//        sysLog.setUserId(userId);
+        String userId= JwtTokenUtil.getUserId(token);
+        String username= JwtTokenUtil.getUserName(token);
+        sysLog.setUsername(username);
+        sysLog.setUserId(userId);
 
         sysLog.setTime((int) time);
         sysLog.setId(UUID.randomUUID().toString());

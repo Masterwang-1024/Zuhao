@@ -1,6 +1,7 @@
 package com.whl.zuhaowan.service.impl;
 
 
+import com.alibaba.druid.util.StringUtils;
 import com.github.pagehelper.PageHelper;
 import com.whl.zuhaowan.contants.Constant;
 import com.whl.zuhaowan.entity.SysUser;
@@ -192,7 +193,35 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void updateUserInfo(UserUpdateReqVO vo, String operationId) {
+        SysUser sysUser=new SysUser();
+        BeanUtils.copyProperties(vo,sysUser);
+        sysUser.setId(operationId);
+        sysUser.setUpdateTime(new Date());
+        sysUser.setUpdateId(operationId);
+        if(StringUtils.isEmpty(vo.getPassword())){
+            sysUser.setPassword(null);
+        }else {
+            String salt=PasswordUtils.getSalt();
+            try {
+                String decryptPassword = RSAEncrypt.decrypt(vo.getPassword(),Constant.RSA_PRIVATE);
+                vo.setPassword(decryptPassword);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            String endPwd=PasswordUtils.encode(vo.getPassword(),salt);
+            sysUser.setSalt(salt);
+            sysUser.setPassword(endPwd);
+        }
 
+        int i = sysUserMapper.updateByPrimaryKeySelective(sysUser);
+        if(i!=1){
+            throw new BusinessException(BaseResponseCode.OPERATION_ERROR);
+        }
+        if(vo.getStatus()==2){
+//            redisService.set(Constant.ACCOUNT_LOCK_KEY+vo.getId(),vo.getId());
+        }else {
+//            redisService.delete(Constant.ACCOUNT_LOCK_KEY+vo.getId());
+        }
     }
 
     @Override

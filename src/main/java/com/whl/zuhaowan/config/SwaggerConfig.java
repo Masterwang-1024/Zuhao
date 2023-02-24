@@ -14,8 +14,7 @@ import springfox.documentation.spi.DocumentationType;
 import springfox.documentation.spring.web.plugins.Docket;
 import springfox.documentation.swagger2.annotations.EnableSwagger2;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 /**
  * @ClassName: SwaggerConfig
@@ -55,10 +54,12 @@ public class SwaggerConfig {
                 ;
     }
 
+
+
     private ApiInfo apiInfo() {
         return new ApiInfoBuilder()
-                .title("自我管理平台")
-                .description("自我管理平台接口")
+                .title("账号交易平台")
+                .description("账号交易平台接口")
                 .termsOfServiceUrl("")
                 .version("1.0")
                 .build();

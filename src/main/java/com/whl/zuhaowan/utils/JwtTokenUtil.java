@@ -1,5 +1,6 @@
 package com.whl.zuhaowan.utils;
 
+import com.whl.zuhaowan.contants.Constant;
 import io.jsonwebtoken.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.StringUtils;
@@ -175,8 +176,8 @@ public class JwtTokenUtil {
         String username=null;
         try {
             Claims claims = getClaimsFromToken(token);
-            username = null == claims?null:claims.getSubject();
-//            username = (String) claims .get(Constant.JWT_USER_NAME);
+//            username = null == claims?null:claims.getSubject();
+            username = (String) claims .get(Constant.JWT_USER_NAME);
         } catch (Exception e) {
             log.error("eror={}",e);
         }

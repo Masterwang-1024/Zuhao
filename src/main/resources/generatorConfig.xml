@@ -85,13 +85,22 @@
 <!--               selectByExampleQueryId="true">-->
 <!--        </table>-->
 
-        <table tableName="sys_permission" domainObjectName="SysPermission"
-               enableCountByExample="false"
-               enableUpdateByExample="false"
-               enableDeleteByExample="false"
-               enableSelectByExample="false"
-               selectByExampleQueryId="true">
-        </table>
+<!--        <table tableName="sys_permission" domainObjectName="SysPermission"-->
+<!--               enableCountByExample="false"-->
+<!--               enableUpdateByExample="false"-->
+<!--               enableDeleteByExample="false"-->
+<!--               enableSelectByExample="false"-->
+<!--               selectByExampleQueryId="true">-->
+<!--        </table>-->
+        <table tableName="file_cluster_store" domainObjectName="FileClusterStore"
+             enableCountByExample="false"
+             enableUpdateByExample="false"
+             enableDeleteByExample="false"
+             enableSelectByExample="false"
+             selectByExampleQueryId="true">
+          <columnOverride column="business_module" javaType="java.lang.Integer"/>
+            <columnOverride column="is_dir" javaType="java.lang.Integer"/>
+      </table>
 
     </context>
 </generatorConfiguration>

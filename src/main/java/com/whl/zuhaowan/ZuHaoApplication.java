@@ -9,7 +9,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 
 @SpringBootApplication
-@NacosPropertySource(dataId = "example", autoRefreshed = true)
+//@NacosPropertySource(dataId = "example", autoRefreshed = true)
 @MapperScan("com.whl.zuhaowan.mapper")
 //@EnableDiscoveryClient
 public class ZuHaoApplication {

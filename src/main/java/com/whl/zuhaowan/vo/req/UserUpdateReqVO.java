@@ -16,7 +16,6 @@ import javax.validation.constraints.NotBlank;
 public class UserUpdateReqVO {
 
     @ApiModelProperty(value = "用户id")
-    @NotBlank(message = "用户id不能为空")
     private String id;
 
     @ApiModelProperty(value = "账号")
